@@ -11,41 +11,73 @@
     class="left_boottom_wrap beautify-scroll-def"
     :class="{ 'overflow-y-auto': !sbtxSwiperFlag }"
   >
-    <component :is="components" :data="list" :class-option="defaultOption">
+    <component :is="components" :data="combinedAlarms" :class-option="defaultOption">
       <ul class="left_boottom">
-        <li class="left_boottom_item" v-for="(item, i) in list" :key="i">
+        <li class="left_boottom_item" v-for="(item, i) in combinedAlarms" :key="i">
           <span class="orderNum doudong">{{ i + 1 }}</span>
           <div class="inner_right">
             <div class="dibu"></div>
-            <div class="flex">
-              <div class="info">
-                <span class="labels">设备ID：</span>
-                <span class="contents zhuyao doudong wangguan">
-                  {{ item.gatewayno }}</span
-                >
+            
+            <!-- 报警类型行 -->
+            <div class="alarm-type-row">
+              <span
+                class="alarm-type doudong"
+                :class="{
+                  'vibration-alarm': item.alarm_type === 'vibration',
+                  'leakage-alarm': item.alarm_type === 'leakage',
+                }"
+              >
+                {{ getAlarmTypeText(item.alarm_type) }}
+              </span>
+              <div v-if="item.alarm_type === 'leakage'" class="alarm-detail-info">
+                <span class="leak-height">
+                  渗漏高度: {{ item.leak_height }}mm
+                </span>
               </div>
-              <div class="info">
-                <span class="labels">时间：</span>
-                <span class="contents " style="font-size: 12px">
-                  {{ item.createTime }}</span
+            </div>
+            
+            <!-- 基本信息行 -->
+            <div class="basic-info-row">
+              <div class="info-item">
+                <span class="label">陶坛编号：</span>
+                <span class="value jar-no">{{ item.jar_no }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">报警时间：</span>
+                <span class="value alarm-time">{{ formatTime(item.alarm_time) }}</span>
+              </div>
+            </div>
+            
+            <!-- 位置信息 -->
+            <div class="position-info">
+              <span class="label">陶坛位置：</span>
+              <span class="value jar-position">{{ item.jar_pos }}</span>
+            </div>
+
+            <!-- 状态信息 -->
+            <div class="status-info">
+              <div class="status-item">
+                <span class="label">处理状态：</span>
+                <span
+                  class="status-value"
+                  :class="{
+                    'status-pending': item.deal_status === '未处理',
+                    'status-resolved': item.deal_status === '已处理',
+                  }"
                 >
+                  {{ item.deal_status }}
+                </span>
+              </div>
+              <div v-if="item.deal_person" class="deal-person-item">
+                <span class="label">处理人：</span>
+                <span class="value">{{ item.deal_person }}</span>
               </div>
             </div>
 
-              <span
-                class="types doudong"
-                :class="{
-                  typeRed: item.onlineState == 0,
-                  typeGreen: item.onlineState == 1,
-                }"
-                >{{ item.onlineState == 1 ? "上线" : "下线" }}</span
-              >
-
-            <div class="info addresswrap">
-              <span class="labels">地址：</span>
-              <span class="contents ciyao" style="font-size: 12px">
-                {{ addressHandle(item) }}</span
-              >
+            <!-- 处理说明 -->
+            <div v-if="item.deal_desc" class="deal-desc">
+              <span class="label">处理说明：</span>
+              <span class="value desc-text">{{ item.deal_desc }}</span>
             </div>
           </div>
         </li>
@@ -64,12 +96,13 @@ export default {
   components: { vueSeamlessScroll, Kong },
   data() {
     return {
-      list: [],
+      lidAlarms: [], // 振动报警数据
+      leakAlarms: [], // 渗漏报警数据
       pageflag: true,
       components: vueSeamlessScroll,
       defaultOption: {
         ...this.$store.state.setting.defaultOption,
-        singleHeight: 240,
+        singleHeight: 280,
         limitMoveNum: 5, 
         step: 0,
       },
@@ -85,6 +118,34 @@ export default {
       }
       return sbtxSwiper;
     },
+    
+    // 合并两种报警数据并按时间排序
+    combinedAlarms() {
+      const combined = [];
+      
+      // 处理振动报警数据
+      this.lidAlarms.forEach(alarm => {
+        combined.push({
+          ...alarm,
+          alarm_type: 'vibration',
+          alarm_time: alarm.open_time,
+          alarm_detail: '陶坛盖异常开启'
+        });
+      });
+      
+      // 处理渗漏报警数据
+      this.leakAlarms.forEach(alarm => {
+        combined.push({
+          ...alarm,
+          alarm_type: 'leakage',
+          alarm_time: alarm.leak_time,
+          alarm_detail: `液位异常变化，渗漏高度: ${alarm.leak_height}mm`
+        });
+      });
+      
+      // 按报警时间倒序排列
+      return combined.sort((a, b) => new Date(b.alarm_time) - new Date(a.alarm_time));
+    }
   },
   created() {
     
@@ -94,39 +155,121 @@ export default {
     this.getData();
   },
   methods: {
-    addressHandle(item) {
-      let name = item.provinceName;
-      if (item.cityName) {
-        name += "/" + item.cityName;
-        if (item.countyName) {
-          name += "/" + item.countyName;
-        }
-      }
-      return name;
+    // 格式化时间显示
+    formatTime(time) {
+      if (!time) return '';
+      const date = new Date(time);
+      return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     },
+
+    // 获取报警类型文本
+    getAlarmTypeText(type) {
+      const typeMap = {
+        'vibration': '振动报警',
+        'leakage': '渗漏报警'
+      };
+      return typeMap[type] || '未知报警';
+    },
+
+    // 获取报警数据
     getData() {
       this.pageflag = true;
-      // this.pageflag =false
-      currentGET("big3", { limitNum: 20 }).then((res) => {
-        console.log("设备提醒", res);
-        if (res.success) {
-          this.countUserNumData = res.data;
-          this.list = res.data.list;
-          let timer = setTimeout(() => {
-            clearTimeout(timer);
-            this.defaultOption.step =
-              this.$store.state.setting.defaultOption.step;
-          }, this.$store.state.setting.defaultOption.waitTime);
+      
+      // 并行获取两种报警数据
+      Promise.all([
+        currentGET("lidAlarms", { limitNum: 10 }),
+        currentGET("leakAlarms", { limitNum: 10 })
+      ]).then(([lidRes, leakRes]) => {
+        console.log("振动报警数据:", lidRes);
+        console.log("渗漏报警数据:", leakRes);
+        
+        if (lidRes.success) {
+          this.lidAlarms = lidRes.data.list || this.generateMockLidData();
         } else {
-          this.pageflag = false;
-          this.$Message({
-            text: res.msg,
-            type: "warning",
-          });
+          this.lidAlarms = this.generateMockLidData();
         }
+        
+        if (leakRes.success) {
+          this.leakAlarms = leakRes.data.list || this.generateMockLeakData();
+        } else {
+          this.leakAlarms = this.generateMockLeakData();
+        }
+        
+        let timer = setTimeout(() => {
+          clearTimeout(timer);
+          this.defaultOption.step = this.$store.state.setting.defaultOption.step;
+        }, this.$store.state.setting.defaultOption.waitTime);
+        
+      }).catch((error) => {
+        console.error("获取报警数据失败:", error);
+        // 接口异常时使用模拟数据
+        this.lidAlarms = this.generateMockLidData();
+        this.leakAlarms = this.generateMockLeakData();
       });
     },
-  },
+
+    // 生成模拟振动报警数据
+    generateMockLidData() {
+      const positions = [
+        'A区-01排-05列', 'B区-03排-12列', 'C区-02排-08列', 
+        'D区-04排-15列', 'E区-01排-20列', 'F区-05排-03列'
+      ];
+      
+      const mockData = [];
+      const now = new Date();
+      
+      for (let i = 0; i < 6; i++) {
+        const status = Math.random() > 0.5 ? '已处理' : '未处理';
+        const randomTime = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+        
+        mockData.push({
+          id: i + 1,
+          jar_id: `jar_${String(i + 1).padStart(4, '0')}`,
+          jar_pos: positions[Math.floor(Math.random() * positions.length)],
+          jar_no: `TT${String(i + 1).padStart(4, '0')}`,
+          open_time: randomTime.toISOString(),
+          deal_status: status,
+          deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
+          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_desc: status === '已处理' ? '已现场检查并复位' : null
+        });
+      }
+      
+      return mockData;
+    },
+
+    // 生成模拟渗漏报警数据
+    generateMockLeakData() {
+      const positions = [
+        'A区-01排-05列', 'B区-03排-12列', 'C区-02排-08列', 
+        'D区-04排-15列', 'E区-01排-20列', 'F区-05排-03列'
+      ];
+      
+      const mockData = [];
+      const now = new Date();
+      
+      for (let i = 0; i < 6; i++) {
+        const status = Math.random() > 0.5 ? '已处理' : '未处理';
+        const randomTime = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+        const leakHeight = (Math.random() * 10 + 1).toFixed(1); // 1-11mm的渗漏高度
+        
+        mockData.push({
+          id: i + 1,
+          jar_id: `jar_${String(i + 7).padStart(4, '0')}`,
+          jar_pos: positions[Math.floor(Math.random() * positions.length)],
+          jar_no: `TT${String(i + 7).padStart(4, '0')}`,
+          leak_time: randomTime.toISOString(),
+          leak_height: leakHeight,
+          deal_status: status,
+          deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
+          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_desc: status === '已处理' ? '已进行密封处理' : null
+        });
+      }
+      
+      return mockData;
+    }
+  }
 };
 </script>
 <style lang='scss' scoped>
@@ -137,7 +280,6 @@ export default {
 }
 
 .doudong {
-  //  vertical-align:middle;
   overflow: hidden;
   -webkit-backface-visibility: hidden;
   -moz-backface-visibility: hidden;
@@ -152,104 +294,216 @@ export default {
 .left_boottom {
   width: 100%;
   height: 100%;
+  padding: 0 5px;
 
   .left_boottom_item {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
+    align-items: flex-start;
+    padding: 12px 8px;
     font-size: 14px;
-    margin: 10px 0;
+    margin: 8px 0;
+    background: rgba(5, 25, 55, 0.3);
+    border: 1px solid rgba(0, 231, 238, 0.2);
+    border-radius: 6px;
+    
     .orderNum {
-      margin: 0 16px 0 -20px;
-    }
-
-    .info {
-      margin-right: 10px;
-      display: flex;
-      align-items: center;
-      color: #fff;
-
-      .labels {
-        flex-shrink: 0;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      .zhuyao {
-        color: $primary-color;
-        font-size: 15px;
-      }
-
-      .ciyao {
-        color: rgba(255, 255, 255, 0.8);
-      }
-
-      .warning {
-        color: #e6a23c;
-        font-size: 15px;
-      }
+      margin: 0 12px 0 0;
+      font-weight: bold;
+      color: #00eaff;
+      font-size: 16px;
+      min-width: 24px;
+      text-align: center;
+      line-height: 1.4;
     }
 
     .inner_right {
       position: relative;
-      height: 100%;
-      width: 380px;
-      flex-shrink: 0;
-      line-height: 1;
+      flex: 1;
+      max-width: 380px;
+      line-height: 1.4;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
+      
       .dibu {
         position: absolute;
         height: 2px;
         width: 104%;
         background-image: url("../../assets/img/zuo_xuxian.png");
-        bottom: -10px;
+        bottom: -12px;
         left: -2%;
         background-size: cover;
       }
-      .addresswrap {
-        width: 100%;
+
+      // 报警类型行
+      .alarm-type-row {
         display: flex;
-        margin-top: 8px;
+        justify-content: space-between;
+        align-items: center;
+        
+        .alarm-type {
+          font-weight: bold;
+          font-size: 14px;
+          padding: 4px 10px;
+          border-radius: 4px;
+          
+          &.vibration-alarm {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+          }
+          
+          &.leakage-alarm {
+            color: #4ECDC4;
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+          }
+        }
+        
+        .alarm-detail-info {
+          .leak-height {
+            color: #ffa500;
+            font-size: 12px;
+            font-weight: bold;
+          }
+        }
+      }
+
+      // 基本信息行
+      .basic-info-row {
+        display: flex;
+        justify-content: space-between;
+        
+        .info-item {
+          display: flex;
+          align-items: center;
+          
+          .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-right: 4px;
+            flex-shrink: 0;
+          }
+          
+          .value {
+            color: #fff;
+            font-size: 12px;
+            
+            &.jar-no {
+              color: #1890ff;
+              font-weight: bold;
+            }
+            
+            &.alarm-time {
+              color: #ffa500;
+              font-weight: bold;
+            }
+          }
+        }
+      }
+
+      // 位置信息
+      .position-info {
+        display: flex;
+        align-items: center;
+        
+        .label {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 12px;
+          margin-right: 4px;
+          flex-shrink: 0;
+        }
+        
+        .value {
+          color: #8abcd1;
+          font-size: 12px;
+        }
+      }
+
+      // 状态信息
+      .status-info {
+        display: flex;
+        justify-content: space-between;
+        
+        .status-item {
+          display: flex;
+          align-items: center;
+          
+          .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-right: 4px;
+            flex-shrink: 0;
+          }
+          
+          .status-value {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            
+            &.status-pending {
+              color: #ff4757;
+              background: rgba(255, 71, 87, 0.2);
+            }
+            
+            &.status-resolved {
+              color: #2ed573;
+              background: rgba(46, 213, 115, 0.2);
+            }
+          }
+        }
+        
+        .deal-person-item {
+          display: flex;
+          align-items: center;
+          
+          .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-right: 4px;
+            flex-shrink: 0;
+          }
+          
+          .value {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+          }
+        }
+      }
+
+      // 处理说明
+      .deal-desc {
+        display: flex;
+        
+        .label {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 12px;
+          margin-right: 4px;
+          flex-shrink: 0;
+        }
+        
+        .value {
+          color: #8abcd1;
+          font-size: 12px;
+          flex: 1;
+        }
       }
     }
-
-    .wangguan {
-      color: #1890ff;
-      font-weight: 900;
-      font-size: 15px;
-      width: 80px;
-      flex-shrink: 0;
-    }
-
-
-    .time {
-      font-size: 12px;
-      // color: rgba(211, 210, 210,.8);
-      color: #fff;
-    }
-
-    .address {
-      font-size: 12px;
-      cursor: pointer;
-      // @include text-overflow(1);
-    }
-
-    .types {
-      width: 30px;
-      flex-shrink: 0;
-    }
-
-    .typeRed {
-      color: #fc1a1a;
-    }
-
-    .typeGreen {
-      color: #29fc29;
-    }
   }
+}
+
+// 滚动条美化
+.beautify-scroll-def::-webkit-scrollbar {
+  width: 6px;
+}
+
+.beautify-scroll-def::-webkit-scrollbar-thumb {
+  background: rgba(0, 231, 238, 0.3);
+  border-radius: 3px;
+}
+
+.beautify-scroll-def::-webkit-scrollbar-track {
+  background: rgba(5, 25, 55, 0.3);
 }
 </style>

@@ -43,7 +43,7 @@ Mock.mock(new RegExp('countDeviceNum'), 'get', countDeviceNum)
 
 // /设备总览 
 
-function sbtx() {
+function deviceReminder() {
     const a = Mock.mock({
         success: true,
         data: {
@@ -64,13 +64,13 @@ function sbtx() {
     return a
 }
 
-Mock.mock(new RegExp('sbtx'), 'get', sbtx)
+Mock.mock(new RegExp('deviceReminder'), 'get', deviceReminder)
 
 
 
 //中间地图
 
-function centermap(options) {
+function centerMap(options) {
     let params = parameteUrl(options.url)
     if (params.regionCode && params.regionCode != 'china') {
         const a = Mock.mock({
@@ -104,7 +104,7 @@ function centermap(options) {
 
 }
 
-Mock.mock(new RegExp('centermap'), 'get', centermap)
+Mock.mock(new RegExp('centerMap'), 'get', centerMap)
 
 // 报警次数
 
@@ -127,7 +127,7 @@ Mock.mock(new RegExp('alarmNum'), 'get', alarmNum)
 
 // 实时预警
 
-function ssyj() {
+function realtimeAlert() {
     const a = Mock.mock({
         success: true,
         data: {
@@ -150,7 +150,7 @@ function ssyj() {
     })
     return a
 }
-Mock.mock(new RegExp('ssyj'), 'get', ssyj)
+Mock.mock(new RegExp('realtimeAlert'), 'get', realtimeAlert)
 //安装计划 
 function installationPlan() {
     let num=  RandomNumBoth(26,32);

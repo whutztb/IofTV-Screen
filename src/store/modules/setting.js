@@ -21,7 +21,7 @@ export default {
             singleWidth: 0, // 单步运动停止的宽度(默认值0是无缝不停止的滚动) direction => 2/3
             waitTime: 3000 // 单步运动停止的时间(默认值1000ms)
           },
-          echartsAutoTime:3000,//echarts 图自动请求接口时间
+          echartsAutoTime:30000,//echarts 图自动请求接口时间
     }),
     getters: {
         //根据菜单路径获取 菜单信息

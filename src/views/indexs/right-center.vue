@@ -55,7 +55,7 @@ export default {
     getData() {
       this.pageflag = true
       // this.pageflag =false
-      currentGET('big7', { gatewayno: this.gatewayno }).then(res => {
+      currentGET('ranking', { gatewayno: this.gatewayno }).then(res => {
 
         if (!this.timer) {
           console.log('报警排名', res);

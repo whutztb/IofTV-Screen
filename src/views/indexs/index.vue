@@ -12,13 +12,10 @@
         <!-- <div class="item">实时监测</div> -->
         
       </div>
-      <ItemWrap class="contetn_left-top contetn_lr-item" title="设备总览">
+      <ItemWrap class="contetn_left-top contetn_lr-item" title="系统总览">
         <LeftTop/>
-    
       </ItemWrap>
-      <ItemWrap class="contetn_left-center contetn_lr-item" title="用户总览">
-        <LeftCenter />
-      </ItemWrap>
+
       <ItemWrap
         class="contetn_left-bottom contetn_lr-item"
         title="设备提醒"
@@ -28,16 +25,16 @@
       </ItemWrap>
     </div>
     <div class="contetn_center">
-      <CenterMap class="contetn_center_top" />
-      <ItemWrap class="contetn_center-bottom" title="安装计划">
-        <CenterBottom />
+      <CenterMap class="contetn_center_top" @vat-selected="handleVatSelected" />
+      <ItemWrap class="contetn_center-bottom" title="陶坛详情">
+        <CenterBottom :selectedVat="selectedVat" />
       </ItemWrap>
     </div>
     <div class="contetn_right">
-      <ItemWrap
-        class="contetn_left-bottom contetn_lr-item"
-        title="报警次数"
-      >
+      <ItemWrap class="contetn_left-center contetn_lr-item" title="酒库统计">
+        <LeftCenter />
+      </ItemWrap>
+      <!--<ItemWrap class="contetn_left-bottom contetn_lr-item" title="历史报警" >
         <RightTop />
       </ItemWrap>
       <ItemWrap
@@ -46,12 +43,12 @@
         style="padding: 0 10px 16px 10px"
       >
         <RightCenter />
-      </ItemWrap>
+      </ItemWrap>-->
       <ItemWrap
         class="contetn_left-bottom contetn_lr-item"
-        title="数据统计图 "
+        title="陶坛历史数据 "
       >
-        <RightBottom />
+        <RightBottom :selectedVat="selectedVat" />
       </ItemWrap>
     </div>
   </div>
@@ -80,6 +77,7 @@ export default {
   },
   data() {
     return {
+      selectedVat: null, // 添加选中的陶坛数据
     
     };
   },
@@ -93,56 +91,64 @@ export default {
 
   mounted() {},
   methods: {
+    handleVatSelected(vat) {
+      console.log('主页面接收到选中的陶坛事件:', vat);
+      this.selectedVat = vat;
+      
+      // 可选：在控制台输出更多调试信息
+      console.log('selectedVat 已更新:', this.selectedVat);
+    }
   
   },
 };
 </script>
 <style lang="scss" scoped>
-// 内容
 .contents {
+  display: flex;
+  height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  justify-content: space-between;
+  overflow: hidden;
+
   .contetn_left,
   .contetn_right {
     width: 540px;
-    box-sizing: border-box;
-    // padding: 16px 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    
+    .contetn_lr-item {
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 16px;
+      overflow: hidden;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 
   .contetn_center {
     width: 720px;
-  }
+    height: 100%;
+    display: grid;
+    grid-template-rows: 2fr 1fr;
+    gap: 16px;
+    
+    .contetn_center_top {
+      min-height: 0;
+      overflow: hidden;
+    }
 
-  //左右两侧 三个块
-  .contetn_lr-item {
-    height: 310px;
-  }
-
-  .contetn_center_top {
-    width: 100%;
-  }
-
-  // 中间
-  .contetn_center {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-  }
-
-  .contetn_center-bottom {
-    height: 315px;
-  }
-
-  //左边 右边 结构一样
-  .contetn_left,
-  .contetn_right {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    position: relative;
-
-  
+    .contetn_center-bottom {
+      min-height: 0;
+      overflow: hidden;
+    }
   }
 }
-
 
 @keyframes rotating {
     0% {

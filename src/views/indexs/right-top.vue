@@ -49,7 +49,7 @@ export default {
     getData() {
       this.pageflag = true;
       // this.pageflag =false
-      currentGET("big4").then((res) => {
+      currentGET("alarmNum").then((res) => {
         if (!this.timer) {
           console.log("报警次数", res);
         }
@@ -156,7 +156,7 @@ export default {
             type: "line",
             smooth: true,
             symbol: "none", //去除点
-            name: "报警1次数",
+            name: "渗漏报警次数",
             color: "rgba(252,144,16,.7)",
             areaStyle: {
                 //右，下，左，上
@@ -197,7 +197,7 @@ export default {
                     padding: [7, 14],
                     borderWidth: 0.5,
                     borderColor: "rgba(252,144,16,.5)",
-                    formatter: "报警1：{c}",
+                    formatter: "渗漏报警：{c}",
                   },
                 },
                 {
@@ -223,7 +223,7 @@ export default {
             type: "line",
             smooth: true,
             symbol: "none", //去除点
-            name: "报警2次数",
+            name: "异动报警次数",
             color: "rgba(9,202,243,.7)",
             areaStyle: {
                 //右，下，左，上
@@ -264,7 +264,7 @@ export default {
                     borderRadius: 6,
                     borderColor: "rgba(9,202,243,.5)",
                     padding: [7, 14],
-                    formatter: "报警2：{c}",
+                    formatter: "异动报警：{c}",
                     borderWidth: 0.5,
                   },
                 },
