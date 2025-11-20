@@ -1,17 +1,25 @@
 <template>
     <transition name="yh-setting-fade">
         <div class="setting" :class="{ settingShow: settingShow }" v-show="settingShow">
-            <div class="setting_dislog" @click="settingShow = false">
-
-            </div>
+            <div class="setting_dislog" @click="settingShow = false"></div>
             <div class="setting_inner">
                 <div class="setting_header">
                     设置
                 </div>
                 <div class="setting_body">
-                    <!-- <div class="left_shu"> 实时监测</div> -->
                     <div class="left_shu"> 全局设置</div> 
-                      <div class="setting_item">
+                    <div class="setting_item">
+                        <span class="setting_label">
+                            设备类型显示:
+                        </span>
+                        <div class="setting_content">
+                            <el-radio-group v-model="deviceTypeRadio" @change="(val) => radiochange(val, 'deviceType')">
+                                <el-radio label="vat">陶坛</el-radio>
+                                <el-radio label="tank">大罐</el-radio>
+                            </el-radio-group>
+                        </div>
+                    </div>
+                    <div class="setting_item">
                         <span class="setting_label">
                             是否进行自动适配<span class="setting_label_tip">(默认分辨率1920*1080)</span>: 
                         </span>
@@ -20,7 +28,6 @@
                                 <el-radio :label="true">是</el-radio>
                                 <el-radio :label="false">否</el-radio>
                             </el-radio-group>
-
                         </div>
                     </div>
                     <div class="left_shu"> 实时监测</div>
@@ -33,7 +40,6 @@
                                 <el-radio :label="true">是</el-radio>
                                 <el-radio :label="false">否</el-radio>
                             </el-radio-group>
-
                         </div>
                     </div>
                     <div class="setting_item">
@@ -63,9 +69,10 @@ export default {
     data() {
         return {
             settingShow: false,
-            sbtxradio:true,
+            sbtxradio: true,
             ssyjradio: true,
-            isScaleradio:true,
+            isScaleradio: true,
+            deviceTypeRadio: 'vat' // 设备类型：vat-陶坛, tank-大罐
         };
     },
     computed: {},
@@ -75,7 +82,14 @@ export default {
         },
         radiochange(val, type) {
             this.$store.commit('setting/updateSwiper', { val, type })
-            if(type==='isScale'){
+            
+            // 如果设备类型发生变化，重新加载页面
+            if(type === 'deviceType') {
+                // 延迟一下让状态保存完成
+                setTimeout(() => {
+                    this.$router.go(0) // 重新加载页面
+                }, 100)
+            } else if(type === 'isScale'){
                 // this.$router.go(0)
                 // location.reload()
                 // window.location.href=window.location.href+"?t="+Date.now()
@@ -87,6 +101,7 @@ export default {
         this.sbtxradio = this.$store.state.setting.sbtxSwiper,
         this.ssyjradio = this.$store.state.setting.ssyjSwiper,
         this.isScaleradio = this.$store.state.setting.isScale;
+        this.deviceTypeRadio = this.$store.state.setting.deviceType || 'vat';
     },
     mounted() {
         document.body.appendChild(this.$el);

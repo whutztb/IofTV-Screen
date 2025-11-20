@@ -11,6 +11,7 @@ export default {
         sbtxSwiper: true,//设备提醒轮播
         ssyjSwiper:true,//实时预警轮播
         isScale:true,//是否进行全局适配
+        deviceType: 'vat', // 新增：设备类型，vat-陶坛，tank-大罐
         defaultOption: {
             step: 4.4, // 数值越大速度滚动越快
             hoverStop: true, // 是否开启鼠标悬停stop
@@ -38,6 +39,10 @@ export default {
                    }
                }
             }
+            // 确保deviceType有默认值
+            if (!state.deviceType) {
+                state.deviceType = 'vat';
+            }
         },
         updateSwiper(state, {val,type}) {
             state[type]=val
@@ -45,7 +50,8 @@ export default {
                 sbtxSwiper:state.sbtxSwiper,
                 ssyjSwiper:state.ssyjSwiper,
                 aztpSwiper:state.aztpSwiper,
-                isScale:state.isScale
+                isScale:state.isScale,
+                deviceType: state.deviceType // 新增：保存设备类型
             }))
         },
 

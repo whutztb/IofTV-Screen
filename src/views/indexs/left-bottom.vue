@@ -50,7 +50,7 @@
             
             <!-- 位置信息 -->
             <div class="position-info">
-              <span class="label">陶坛位置：</span>
+              <span class="label">陶坛分布图：</span>
               <span class="value jar-position">{{ item.jar_pos }}</span>
             </div>
 
@@ -208,25 +208,31 @@ export default {
       });
     },
 
-    // 生成模拟振动报警数据
+    // 生成模拟振动报警数据 - 修改为与主界面一致的编号规则
     generateMockLidData() {
-      const positions = [
-        'A区-01排-05列', 'B区-03排-12列', 'C区-02排-08列', 
-        'D区-04排-15列', 'E区-01排-20列', 'F区-05排-03列'
-      ];
-      
       const mockData = [];
       const now = new Date();
       
-      for (let i = 0; i < 6; i++) {
+      // 生成10条振动报警数据
+      for (let i = 0; i < 10; i++) {
         const status = Math.random() > 0.5 ? '已处理' : '未处理';
         const randomTime = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+        
+        // 随机生成楼栋、楼层、房间、陶坛编号
+        const building = Math.floor(Math.random() * 4) + 1; // 1-4号楼
+        const floor = Math.floor(Math.random() * 5) + 1; // 1-5层
+        const room = Math.floor(Math.random() * 8) + 1; // 1-8房间
+        const vat = Math.floor(Math.random() * 100) + 1; // 1-100陶坛
+        
+        // 生成与主界面一致的编号和位置
+        const jarNo = `${building}-${floor}-${room.toString().padStart(2, '0')}-${vat.toString().padStart(2, '0')}`;
+        const jarPos = `${building}号楼 - ${floor}层 - ${floor}${room.toString().padStart(2, '0')}室`;
         
         mockData.push({
           id: i + 1,
           jar_id: `jar_${String(i + 1).padStart(4, '0')}`,
-          jar_pos: positions[Math.floor(Math.random() * positions.length)],
-          jar_no: `TT${String(i + 1).padStart(4, '0')}`,
+          jar_pos: jarPos,
+          jar_no: jarNo,
           open_time: randomTime.toISOString(),
           deal_status: status,
           deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
@@ -238,26 +244,32 @@ export default {
       return mockData;
     },
 
-    // 生成模拟渗漏报警数据
+    // 生成模拟渗漏报警数据 - 修改为与主界面一致的编号规则
     generateMockLeakData() {
-      const positions = [
-        'A区-01排-05列', 'B区-03排-12列', 'C区-02排-08列', 
-        'D区-04排-15列', 'E区-01排-20列', 'F区-05排-03列'
-      ];
-      
       const mockData = [];
       const now = new Date();
       
-      for (let i = 0; i < 6; i++) {
+      // 生成10条渗漏报警数据
+      for (let i = 0; i < 10; i++) {
         const status = Math.random() > 0.5 ? '已处理' : '未处理';
         const randomTime = new Date(now.getTime() - Math.random() * 24 * 60 * 60 * 1000);
         const leakHeight = (Math.random() * 10 + 1).toFixed(1); // 1-11mm的渗漏高度
         
+        // 随机生成楼栋、楼层、房间、陶坛编号
+        const building = Math.floor(Math.random() * 4) + 1; // 1-4号楼
+        const floor = Math.floor(Math.random() * 5) + 1; // 1-5层
+        const room = Math.floor(Math.random() * 8) + 1; // 1-8房间
+        const vat = Math.floor(Math.random() * 100) + 1; // 1-100陶坛
+        
+        // 生成与主界面一致的编号和位置
+        const jarNo = `${building}-${floor}-${room.toString().padStart(2, '0')}-${vat.toString().padStart(2, '0')}`;
+        const jarPos = `${building}号楼 - ${floor}层 - ${floor}${room.toString().padStart(2, '0')}室`;
+        
         mockData.push({
           id: i + 1,
-          jar_id: `jar_${String(i + 7).padStart(4, '0')}`,
-          jar_pos: positions[Math.floor(Math.random() * positions.length)],
-          jar_no: `TT${String(i + 7).padStart(4, '0')}`,
+          jar_id: `jar_${String(i + 11).padStart(4, '0')}`,
+          jar_pos: jarPos,
+          jar_no: jarNo,
           leak_time: randomTime.toISOString(),
           leak_height: leakHeight,
           deal_status: status,

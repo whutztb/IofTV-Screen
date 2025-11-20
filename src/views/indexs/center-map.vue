@@ -29,6 +29,7 @@
                     class="floor-indicator"
                   ></div>
                 </div>
+                <div class="building-base"></div>
               </div>
               <div class="building-info">
                 <div class="building-name">{{ building.name }}</div>
@@ -120,7 +121,7 @@
 export default {
   data() {
     return {
-      maptitle: "陶坛位置",
+      maptitle: "陶坛分布图",
       currentLevel: "building", // building, floor, room, vat
       currentBuilding: null,
       currentFloor: null,
@@ -249,7 +250,7 @@ export default {
         this.maptitle = this.currentBuilding.name;
       } else if (this.currentLevel === "floor") {
         this.currentLevel = "building";
-        this.maptitle = "陶坛位置";
+        this.maptitle = "陶坛分布图";
       }
     },
     
@@ -457,14 +458,14 @@ export default {
       flex-direction: column;
     }
 
-    // 楼栋选择样式 - 修复挤压问题
+    // 楼栋选择样式 - 优化楼层显示
     .building-plan {
       .buildings-container {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(2, 1fr);
-        gap: 20px; // 减小间隙
-        padding: 20px; // 减小内边距
+        gap: 20px;
+        padding: 20px;
         height: 100%;
         min-height: 0;
         
@@ -473,13 +474,13 @@ export default {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 15px; // 减小内边距
+          padding: 15px;
           border: 1px solid rgba(0, 231, 238, 0.5);
           border-radius: 10px;
           background: rgba(5, 25, 55, 0.5);
           cursor: pointer;
           transition: all 0.3s;
-          min-height: 0; // 关键：允许缩小
+          min-height: 0;
           
           &:hover {
             transform: translateY(-5px);
@@ -487,28 +488,47 @@ export default {
           }
           
           .building-shape {
-            width: 100px; // 减小尺寸
-            height: 120px; // 减小尺寸
+            width: 100px;
+            height: 120px;
             background: linear-gradient(135deg, #2f90b9, #1781b5);
             border-radius: 8px;
-            margin-bottom: 10px; // 减小间距
+            margin-bottom: 10px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 8px; // 减小内边距
+            padding: 0; // 移除内边距
             
             .building-floors {
               display: flex;
               flex-direction: column;
-              gap: 3px; // 减小间隙
+              gap: 1px; // 减小间隙
+              height: 85%; // 楼层区域占据85%高度
+              justify-content: flex-end; // 从底部开始
+              padding: 4px;
               
               .floor-indicator {
-                height: 6px; // 减小高度
-                background: rgba(255, 255, 255, 0.3);
+                height: 12px; // 增加楼层高度
+                background: rgba(255, 255, 255, 0.4);
                 border-radius: 2px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+                
+                &:nth-child(odd) {
+                  background: rgba(255, 255, 255, 0.5); // 交替颜色
+                }
+                
+                &:hover {
+                  background: rgba(255, 255, 255, 0.7);
+                }
               }
+            }
+            
+            .building-base {
+              height: 15%; // 底座高度
+              background: linear-gradient(135deg, #1a5a7a, #0f4560);
+              border-top: 2px solid rgba(255, 255, 255, 0.3);
             }
           }
           
@@ -516,13 +536,14 @@ export default {
             text-align: center;
             
             .building-name {
-              font-size: 16px; // 减小字体
+              font-size: 16px;
               color: #00eaff;
-              margin-bottom: 3px; // 减小间距
+              margin-bottom: 3px;
+              font-weight: bold;
             }
             
             .building-stats {
-              font-size: 12px; // 减小字体
+              font-size: 12px;
               color: #8abcd1;
             }
           }
@@ -530,27 +551,27 @@ export default {
       }
     }
 
-    // 楼层选择样式 - 修复挤压问题
+    // 楼层选择样式 - 保持不变
     .floor-plan {
       .floor-header {
-        padding: 10px 15px; // 减小垂直内边距
+        padding: 10px 15px;
         border-bottom: 1px solid rgba(0, 231, 238, 0.3);
         text-align: center;
-        flex-shrink: 0; // 防止头部被压缩
+        flex-shrink: 0;
         
         h3 {
           color: #00eaff;
-          margin-bottom: 3px; // 减小间距
-          font-size: 18px; // 减小字体
+          margin-bottom: 3px;
+          font-size: 18px;
         }
       }
       
       .floors-container {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(2, 1fr); // 明确指定2行
-        gap: 15px; // 减小间隙
-        padding: 15px; // 减小内边距
+        grid-template-rows: repeat(2, 1fr);
+        gap: 15px;
+        padding: 15px;
         flex: 1;
         min-height: 0;
         
@@ -559,13 +580,13 @@ export default {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 12px; // 减小内边距
+          padding: 12px;
           border: 1px solid rgba(0, 231, 238, 0.5);
           border-radius: 8px;
           background: rgba(5, 25, 55, 0.5);
           cursor: pointer;
           transition: all 0.3s;
-          min-height: 0; // 关键：允许缩小
+          min-height: 0;
           
           &:hover {
             transform: translateY(-5px);
@@ -573,11 +594,11 @@ export default {
           }
           
           .floor-shape {
-            width: 80px; // 减小尺寸
-            height: 60px; // 减小尺寸
+            width: 80px;
+            height: 60px;
             background: linear-gradient(135deg, #2f90b9, #1781b5);
             border-radius: 5px;
-            margin-bottom: 8px; // 减小间距
+            margin-bottom: 8px;
             position: relative;
             display: flex;
             align-items: center;
@@ -587,7 +608,7 @@ export default {
               display: grid;
               grid-template-columns: repeat(4, 1fr);
               grid-template-rows: repeat(2, 1fr);
-              gap: 3px; // 减小间隙
+              gap: 3px;
               width: 80%;
               height: 60%;
               
@@ -602,36 +623,36 @@ export default {
             text-align: center;
             
             .floor-name {
-              font-size: 14px; // 减小字体
+              font-size: 14px;
               color: #00eaff;
-              margin-bottom: 3px; // 减小间距
+              margin-bottom: 3px;
             }
           }
         }
       }
     }
 
-    // 房间选择样式 - 修复挤压问题
+    // 房间选择样式 - 保持不变
     .room-plan {
       .room-header {
-        padding: 10px 15px; // 减小垂直内边距
+        padding: 10px 15px;
         border-bottom: 1px solid rgba(0, 231, 238, 0.3);
         text-align: center;
         flex-shrink: 0;
         
         h3 {
           color: #00eaff;
-          margin-bottom: 3px; // 减小间距
-          font-size: 18px; // 减小字体
+          margin-bottom: 3px;
+          font-size: 18px;
         }
       }
       
       .rooms-container {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(2, 1fr); // 明确指定2行
-        gap: 12px; // 减小间隙
-        padding: 15px; // 减小内边距
+        grid-template-rows: repeat(2, 1fr);
+        gap: 12px;
+        padding: 15px;
         flex: 1;
         min-height: 0;
         
@@ -640,13 +661,13 @@ export default {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 12px; // 减小内边距
+          padding: 12px;
           border: 1px solid rgba(0, 231, 238, 0.5);
           border-radius: 8px;
           background: rgba(5, 25, 55, 0.5);
           cursor: pointer;
           transition: all 0.3s;
-          min-height: 0; // 关键：允许缩小
+          min-height: 0;
           
           &:hover {
             transform: translateY(-5px);
@@ -654,11 +675,11 @@ export default {
           }
           
           .room-shape {
-            width: 60px; // 减小尺寸
-            height: 45px; // 减小尺寸
+            width: 60px;
+            height: 45px;
             background: linear-gradient(135deg, #2f90b9, #1781b5);
             border-radius: 5px;
-            margin-bottom: 8px; // 减小间距
+            margin-bottom: 8px;
             position: relative;
             overflow: hidden;
             
@@ -672,7 +693,7 @@ export default {
               background: 
                 linear-gradient(90deg, transparent 49%, rgba(255,255,255,0.2) 50%, transparent 51%),
                 linear-gradient(transparent 49%, rgba(255,255,255,0.2) 50%, transparent 51%);
-              background-size: 15px 15px; // 减小网格尺寸
+              background-size: 15px 15px;
             }
           }
           
@@ -680,9 +701,9 @@ export default {
             text-align: center;
             
             .room-name {
-              font-size: 14px; // 减小字体
+              font-size: 14px;
               color: #00eaff;
-              margin-bottom: 3px; // 减小间距
+              margin-bottom: 3px;
             }
           }
         }
@@ -750,7 +771,7 @@ export default {
   }
 }
 
-// 响应式设计 - 调整以适应新布局
+// 响应式设计
 @media (max-width: 1200px) {
   .centermap .mapwrap .building-plan .buildings-container {
     grid-template-columns: 1fr;
@@ -773,31 +794,6 @@ export default {
     grid-template-rows: repeat(4, 1fr);
     gap: 10px;
     padding: 10px;
-  }
-  
-  .centermap .mapwrap .vat-plan .vat-container {
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(20, 1fr);
-  }
-}
-
-// 响应式设计
-@media (max-width: 1200px) {
-  .centermap .mapwrap .building-plan .buildings-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .centermap .mapwrap .floor-plan .floors-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(5, 1fr);
-  }
-  
-  .centermap .mapwrap .room-plan .rooms-container {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, 1fr);
   }
   
   .centermap .mapwrap .vat-plan .vat-container {

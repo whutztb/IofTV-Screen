@@ -7,96 +7,86 @@
 -->
 <template>
   <div class="cellar-stats-container" v-if="pageflag">
-    <!-- 删除表头部分 -->
-    
     <div class="table-container" ref="tableContainer">
-      <div class="table-scroll" :style="scrollStyle">
+      <!-- 固定表头 -->
+      <div class="table-header-fixed">
         <table class="stats-table">
           <thead>
             <tr>
-              <th>酒库名称</th>
-              <th>位置</th>
-              <th>缸型</th>
-              <th>总数</th>
-              <th>正常坛</th>
-              <th>渗漏坛</th>
-              <th>空坛</th>
-              <th>现有酒量</th>
-              <th>总容积</th>
-              <th>利用率</th>
+              <th style="width: 15%">酒库名称</th>
+              <th style="width: 10%">缸型</th>
+              <th style="width: 8%">总数</th>
+              <th style="width: 10%">正常坛</th>
+              <th style="width: 10%">渗漏坛</th>
+              <th style="width: 8%">空坛</th>
+              <th style="width: 12%">现有酒量</th>
+              <th style="width: 12%">总容积</th>
+              <th style="width: 15%">利用率</th>
             </tr>
           </thead>
-          <tbody>
-            <tr 
-              v-for="cellar in cellarData" 
-              :key="cellar.id"
-              :class="getRowClass(cellar)"
-            >
-              <td class="cellar-name">{{ cellar.cellar_name }}</td>
-              <td>{{ cellar.cellar_pos }}</td>
-              <td>{{ cellar.jar_type }}</td>
-              <td>{{ cellar.all_jar_num }}</td>
-              <td class="normal-num">{{ getNormalNum(cellar) }}</td>
-              <td class="leaking-num">{{ cellar.bad_jar_num }}</td>
-              <td class="empty-num">{{ cellar.empty_jar_num }}</td>
-              <td class="wine-volume">{{ formatVolume(cellar.all_wine_volume) }}</td>
-              <td class="total-volume">{{ formatVolume(cellar.all_jar_volume) }}</td>
-              <td class="usage-rate">
-                <div class="rate-bar">
-                  <div 
-                    class="rate-fill" 
-                    :style="{ width: cellar.cellar_usage_rate + '%' }"
-                  ></div>
-                  <span class="rate-text">{{ cellar.cellar_usage_rate.toFixed(1) }}%</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
         </table>
-        
-        <!-- 复制一份用于无缝滚动 -->
-        <table class="stats-table" v-if="cellarData.length > 0 && needScroll">
-          <thead>
-            <tr>
-              <th>酒库名称</th>
-              <th>位置</th>
-              <th>缸型</th>
-              <th>总数</th>
-              <th>正常坛</th>
-              <th>渗漏坛</th>
-              <th>空坛</th>
-              <th>现有酒量</th>
-              <th>总容积</th>
-              <th>利用率</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr 
-              v-for="cellar in cellarData" 
-              :key="cellar.id + '-copy'"
-              :class="getRowClass(cellar)"
-            >
-              <td class="cellar-name">{{ cellar.cellar_name }}</td>
-              <td>{{ cellar.cellar_pos }}</td>
-              <td>{{ cellar.jar_type }}</td>
-              <td>{{ cellar.all_jar_num }}</td>
-              <td class="normal-num">{{ getNormalNum(cellar) }}</td>
-              <td class="leaking-num">{{ cellar.bad_jar_num }}</td>
-              <td class="empty-num">{{ cellar.empty_jar_num }}</td>
-              <td class="wine-volume">{{ formatVolume(cellar.all_wine_volume) }}</td>
-              <td class="total-volume">{{ formatVolume(cellar.all_jar_volume) }}</td>
-              <td class="usage-rate">
-                <div class="rate-bar">
-                  <div 
-                    class="rate-fill" 
-                    :style="{ width: cellar.cellar_usage_rate + '%' }"
-                  ></div>
-                  <span class="rate-text">{{ cellar.cellar_usage_rate.toFixed(1) }}%</span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      </div>
+      
+      <!-- 滚动内容区域 -->
+      <div class="table-content-scroll" ref="tableContent">
+        <div class="table-scroll" :style="scrollStyle">
+          <table class="stats-table">
+            <tbody>
+              <tr 
+                v-for="cellar in cellarData" 
+                :key="cellar.id"
+                :class="getRowClass(cellar)"
+              >
+                <td class="cellar-name" style="width: 15%">{{ cellar.cellar_name }}</td>
+                <td style="width: 10%">{{ cellar.jar_type }}</td>
+                <td style="width: 8%">{{ cellar.all_jar_num }}</td>
+                <td class="normal-num" style="width: 10%">{{ getNormalNum(cellar) }}</td>
+                <td class="leaking-num" style="width: 10%">{{ cellar.bad_jar_num }}</td>
+                <td class="empty-num" style="width: 8%">{{ cellar.empty_jar_num }}</td>
+                <td class="wine-volume" style="width: 12%">{{ formatVolume(cellar.all_wine_volume) }}</td>
+                <td class="total-volume" style="width: 12%">{{ formatVolume(cellar.all_jar_volume) }}</td>
+                <td class="usage-rate" style="width: 15%">
+                  <div class="rate-bar">
+                    <div 
+                      class="rate-fill" 
+                      :style="{ width: cellar.cellar_usage_rate + '%' }"
+                    ></div>
+                    <span class="rate-text">{{ cellar.cellar_usage_rate.toFixed(1) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- 复制一份用于无缝滚动 -->
+          <table class="stats-table" v-if="cellarData.length > 0 && needScroll">
+            <tbody>
+              <tr 
+                v-for="cellar in cellarData" 
+                :key="cellar.id + '-copy'"
+                :class="getRowClass(cellar)"
+              >
+                <td class="cellar-name" style="width: 15%">{{ cellar.cellar_name }}</td>
+                <td style="width: 10%">{{ cellar.jar_type }}</td>
+                <td style="width: 8%">{{ cellar.all_jar_num }}</td>
+                <td class="normal-num" style="width: 10%">{{ getNormalNum(cellar) }}</td>
+                <td class="leaking-num" style="width: 10%">{{ cellar.bad_jar_num }}</td>
+                <td class="empty-num" style="width: 8%">{{ cellar.empty_jar_num }}</td>
+                <td class="wine-volume" style="width: 12%">{{ formatVolume(cellar.all_wine_volume) }}</td>
+                <td class="total-volume" style="width: 12%">{{ formatVolume(cellar.all_jar_volume) }}</td>
+                <td class="usage-rate" style="width: 15%">
+                  <div class="rate-bar">
+                    <div 
+                      class="rate-fill" 
+                      :style="{ width: cellar.cellar_usage_rate + '%' }"
+                    ></div>
+                    <span class="rate-text">{{ cellar.cellar_usage_rate.toFixed(1) }}%</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
     
@@ -123,7 +113,7 @@ export default {
     return {
       cellarData: [],
       scrollPosition: 0,
-      scrollSpeed: 0.5,
+      scrollSpeed: 2,
       scrollDirection: 1,
       scrollTimer: null,
       pageflag: true,
@@ -141,17 +131,17 @@ export default {
       return this.cellarData.length;
     },
     totalNormal() {
-      return this.cellarData.reduce(function(sum, cellar) {
+      return this.cellarData.reduce((sum, cellar) => {
         return sum + (cellar.all_jar_num - cellar.empty_jar_num - cellar.bad_jar_num);
       }, 0);
     },
     totalLeaking() {
-      return this.cellarData.reduce(function(sum, cellar) {
+      return this.cellarData.reduce((sum, cellar) => {
         return sum + cellar.bad_jar_num;
       }, 0);
     },
     totalEmpty() {
-      return this.cellarData.reduce(function(sum, cellar) {
+      return this.cellarData.reduce((sum, cellar) => {
         return sum + cellar.empty_jar_num;
       }, 0);
     }
@@ -182,16 +172,15 @@ export default {
     },
     
     startAutoScroll() {
-      var self = this;
-      this.scrollTimer = setInterval(function() {
-        var container = self.$refs.tableContainer;
+      const self = this;
+      this.scrollTimer = setInterval(() => {
+        const container = self.$refs.tableContent;
         if (!container) return;
         
-        var tableElement = container.querySelector('.stats-table');
-        var tableHeight = tableElement ? tableElement.offsetHeight : 0;
-        var containerHeight = container.offsetHeight;
+        const tableElement = container.querySelector('.stats-table');
+        const tableHeight = tableElement ? tableElement.offsetHeight : 0;
+        const containerHeight = container.offsetHeight;
         
-        // 如果表格高度小于容器高度，不需要滚动
         if (tableHeight <= containerHeight) {
           self.needScroll = false;
           return;
@@ -200,8 +189,7 @@ export default {
         self.needScroll = true;
         self.scrollPosition += self.scrollSpeed * self.scrollDirection;
         
-        // 到达底部或顶部时改变方向
-        var maxScroll = tableHeight;
+        const maxScroll = tableHeight;
         if (self.scrollPosition >= maxScroll) {
           self.scrollPosition = 0;
         } else if (self.scrollPosition < 0) {
@@ -212,102 +200,87 @@ export default {
     
     getData() {
       this.pageflag = true;
-      
-      // 使用模拟数据
       this.useMockData();
     },
     
-    // 模拟数据
+    // 生成与设备分布图一致的模拟数据
     useMockData() {
-      this.cellarData = [
-        {
-          id: 1,
-          cellar_id: "A001",
-          cellar_name: "1号酒库",
-          cellar_pos: "1号楼-1层",
-          jar_type: "标准坛",
-          all_jar_num: 100,
-          empty_jar_num: 2,
-          bad_jar_num: 1,
-          all_wine_volume: 85600,
-          all_jar_volume: 100000,
-          cellar_usage_rate: 85.6
-        },
-        {
-          id: 2,
-          cellar_id: "A002",
-          cellar_name: "2号酒库",
-          cellar_pos: "1号楼-2层",
-          jar_type: "标准坛",
-          all_jar_num: 100,
-          empty_jar_num: 5,
-          bad_jar_num: 3,
-          all_wine_volume: 81000,
-          all_jar_volume: 100000,
-          cellar_usage_rate: 81.0
-        },
-        {
-          id: 3,
-          cellar_id: "B001",
-          cellar_name: "3号酒库",
-          cellar_pos: "2号楼-1层",
-          jar_type: "半吨坛",
-          all_jar_num: 100,
-          empty_jar_num: 3,
-          bad_jar_num: 2,
-          all_wine_volume: 42000,
-          all_jar_volume: 50000,
-          cellar_usage_rate: 94.0
-        },
-        {
-          id: 4,
-          cellar_id: "B002",
-          cellar_name: "4号酒库",
-          cellar_pos: "2号楼-2层",
-          jar_type: "半吨坛",
-          all_jar_num: 100,
-          empty_jar_num: 0,
-          bad_jar_num: 2,
-          all_wine_volume: 48000,
-          all_jar_volume: 50000,
-          cellar_usage_rate: 96.0
-        },
-        {
-          id: 5,
-          cellar_id: "C001",
-          cellar_name: "5号酒库",
-          cellar_pos: "3号楼-1层",
-          jar_type: "300KG坛",
-          all_jar_num: 100,
-          empty_jar_num: 5,
-          bad_jar_num: 0,
-          all_wine_volume: 27000,
-          all_jar_volume: 30000,
-          cellar_usage_rate: 90.0
-        },
-        {
-          id: 6,
-          cellar_id: "C002",
-          cellar_name: "6号酒库",
-          cellar_pos: "3号楼-2层",
-          jar_type: "标准坛",
-          all_jar_num: 100,
-          empty_jar_num: 1,
-          bad_jar_num: 2,
-          all_wine_volume: 85000,
-          all_jar_volume: 100000,
-          cellar_usage_rate: 85.0
-        }
-      ];
+      const cellarData = [];
       
-      // 重新开始滚动
-      var self = this;
-      this.$nextTick(function() {
+      // 4栋楼，每栋5层，每层8个房间
+      const buildings = ['1号楼', '2号楼', '3号楼', '4号楼'];
+      // 修改缸型描述：标准坛 -> 吨坛
+      const jarTypes = ['吨坛', '半吨坛', '300KG坛', '吨坛', '半吨坛']; // 按楼层分配不同的缸型
+      
+      buildings.forEach((building, buildingIndex) => {
+        for (let floor = 1; floor <= 5; floor++) {
+          for (let roomNum = 1; roomNum <= 8; roomNum++) {
+            // 房间编号：楼层+房间号，如101, 102, ..., 508
+            const roomNumber = floor * 100 + roomNum;
+            
+            // 生成唯一酒库名称：楼栋-楼层-房间号库，如1-1-01库
+            const cellarName = `${buildingIndex + 1}-${floor}-${roomNum.toString().padStart(2, '0')}库`;
+            
+            // 随机生成酒库数据，保持与设备分布图一致
+            const allJarNum = 100; // 每个房间100个陶坛
+            const emptyJarNum = Math.floor(Math.random() * 6); // 0-5个空坛
+            const badJarNum = Math.floor(Math.random() * 4); // 0-3个渗漏坛
+            const normalJarNum = allJarNum - emptyJarNum - badJarNum;
+            
+            // 根据楼层选择缸型
+            const jarType = jarTypes[floor - 1];
+            
+            // 计算容积（根据缸型）
+            let singleJarVolume;
+            switch(jarType) {
+              case '吨坛':
+                singleJarVolume = 1000; // 1000L
+                break;
+              case '半吨坛':
+                singleJarVolume = 500; // 500L
+                break;
+              case '300KG坛':
+                singleJarVolume = 300; // 300L
+                break;
+              default:
+                singleJarVolume = 1000;
+            }
+            
+            const allJarVolume = allJarNum * singleJarVolume;
+            
+            // 计算现有酒量（正常坛满容量，渗漏坛部分容量，空坛0容量）
+            const normalVolume = normalJarNum * singleJarVolume*0.9;
+            const leakingVolume = badJarNum * singleJarVolume * (0.2 + Math.random() * 0.3); // 渗漏坛剩余20%-50%
+            const allWineVolume = normalVolume + leakingVolume;
+            
+            // 计算利用率
+            const cellarUsageRate = (allWineVolume / allJarVolume) * 100;
+            
+            cellarData.push({
+              id: `${buildingIndex + 1}-${floor}-${roomNum}`,
+              cellar_id: `${building.charAt(0)}${roomNumber}`,
+              cellar_name: cellarName, // 使用唯一酒库名称
+              cellar_pos: `${building}-${floor}层`,
+              jar_type: jarType,
+              all_jar_num: allJarNum,
+              empty_jar_num: emptyJarNum,
+              bad_jar_num: badJarNum,
+              all_wine_volume: Math.round(allWineVolume),
+              all_jar_volume: allJarVolume,
+              cellar_usage_rate: parseFloat(cellarUsageRate.toFixed(1))
+            });
+          }
+        }
+      });
+      
+      this.cellarData = cellarData;
+      
+      const self = this;
+      this.$nextTick(() => {
         self.stopAutoScroll();
         self.startAutoScroll();
       });
       
-      // 启动轮询
       this.switper();
     },
     
@@ -316,11 +289,11 @@ export default {
       if (this.timer) {
         return;
       }
-      var self = this;
-      var looper = function(a) {
+      const self = this;
+      const looper = () => {
         self.getData();
       };
-      var intervalTime = this.$store.state.setting.echartsAutoTime || 30000;
+      const intervalTime = this.$store.state.setting.echartsAutoTime || 30000;
       this.timer = setInterval(looper, intervalTime);
     },
     
@@ -339,7 +312,7 @@ export default {
     
     // 获取行样式
     getRowClass(cellar) {
-      var classes = [];
+      const classes = [];
       
       // 根据利用率设置不同样式
       if (cellar.cellar_usage_rate >= 90) {
@@ -369,36 +342,53 @@ export default {
   overflow: hidden;
 }
 
-/* 删除 stats-header 相关样式 */
-
 .table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.table-header-fixed {
+  flex-shrink: 0;
+  z-index: 10;
+  position: relative;
+  
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+    
+    th {
+      background: rgba(0, 114, 255, 0.3);
+      color: #00eaff;
+      font-weight: bold;
+      padding: 8px 4px;
+      text-align: center;
+      border-bottom: 1px solid rgba(0, 231, 238, 0.3);
+      white-space: nowrap;
+    }
+  }
+}
+
+.table-content-scroll {
   flex: 1;
   overflow: hidden;
   position: relative;
-  /* 调整上边距，因为删除了表头 */
-  padding-top: 10px;
 }
 
 .table-scroll {
   position: absolute;
   width: 100%;
-  transition: transform 0.1s linear;
 }
 
 .stats-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  
-  th {
-    background: rgba(0, 114, 255, 0.2);
-    color: #00eaff;
-    font-weight: bold;
-    padding: 8px 4px;
-    text-align: center;
-    border-bottom: 1px solid rgba(0, 231, 238, 0.3);
-    white-space: nowrap;
-  }
+  table-layout: fixed;
   
   td {
     padding: 6px 4px;
@@ -406,11 +396,11 @@ export default {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     color: #ffffff;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   tr {
-    transition: all 0.3s ease;
-    
     &:hover {
       background: rgba(0, 231, 238, 0.1);
     }
@@ -469,7 +459,6 @@ export default {
       height: 100%;
       background: linear-gradient(90deg, #56B557, #33A1DB);
       border-radius: 10px;
-      transition: width 0.3s ease;
     }
     
     .rate-text {

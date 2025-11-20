@@ -54,7 +54,11 @@ export default {
       timeLabels: [],
       dataTimer: null,
       maxDataPoints: 96,
-      currentVatId: null
+      currentVatId: null,
+      // 添加状态跟踪
+      baseLevel: 1200, // 基础液位高度
+      lastTemperature: 20, // 上次温度
+      leakRate: 0.1 // 渗漏坛的下降速率
     };
   },
   watch: {
@@ -107,12 +111,19 @@ export default {
         return;
       }
 
+      // 根据陶坛状态设置基础液位
+      if (this.selectedVat.status === 'empty') {
+        this.baseLevel = 0;
+      } else {
+        this.baseLevel = 1200 + Math.random() * 100; // 正常液位在1200-1300mm之间
+      }
+
       this.generateInitialData();
       this.updateChart();
       this.chartDataReady = true;
     },
 
-    // 生成初始数据
+    // 生成初始数据 - 修改为时间正序
     generateInitialData() {
       this.levelData = [];
       this.temperatureData = [];
@@ -121,48 +132,78 @@ export default {
       const now = new Date();
       const pointCount = this.maxDataPoints;
 
-      for (let i = pointCount - 1; i >= 0; i--) {
-        const time = new Date(now);
+      // 设置初始温度
+      this.lastTemperature = 20 + (Math.random() - 0.5) * 2;
+
+      // 计算起始时间
+      let startTime = new Date(now);
+      switch (this.currentTimeRange) {
+        case '24h':
+          startTime.setMinutes(startTime.getMinutes() - (pointCount - 1) * 15);
+          break;
+        case '7d':
+          startTime.setHours(startTime.getHours() - (pointCount - 1) * 2);
+          break;
+        case '30d':
+          startTime.setHours(startTime.getHours() - (pointCount - 1) * 8);
+          break;
+      }
+
+      // 从最早的时间开始生成数据
+      for (let i = 0; i < pointCount; i++) {
+        const time = new Date(startTime);
         
         // 根据时间范围调整时间间隔
         switch (this.currentTimeRange) {
           case '24h':
-            time.setMinutes(time.getMinutes() - i * 15); // 每15分钟一个点
+            time.setMinutes(time.getMinutes() + i * 15);
             this.timeLabels.push(time.getHours().toString().padStart(2, '0') + ':' + time.getMinutes().toString().padStart(2, '0'));
             break;
           case '7d':
-            time.setHours(time.getHours() - i * 2); // 每2小时一个点
-            this.timeLabels.push(`${time.getMonth() + 1}/${time.getDate()} ${time.getHours().toString().padStart(2, '0')}:00`);
+            time.setHours(time.getHours() + i * 2);
+            this.timeLabels.push(time.getMonth() + 1 + '/' + time.getDate() + ' ' + time.getHours().toString().padStart(2, '0') + ':00');
             break;
           case '30d':
-            time.setHours(time.getHours() - i * 8); // 每8小时一个点
-            this.timeLabels.push(`${time.getMonth() + 1}/${time.getDate()} ${time.getHours().toString().padStart(2, '0')}:00`);
+            time.setHours(time.getHours() + i * 8);
+            this.timeLabels.push(time.getMonth() + 1 + '/' + time.getDate() + ' ' + time.getHours().toString().padStart(2, '0') + ':00');
             break;
         }
 
-        // 根据陶坛状态生成不同的数据（液位单位改为mm，范围0-5000mm）
-        const baseLevel = this.selectedVat.status === 'empty' ? 0 : 
-                         this.selectedVat.status === 'leaking' ? 2000 + Math.random() * 1000 : 
-                         4000 + Math.random() * 1000;
+        // 生成温度数据 - 模拟昼夜变化
+        const hour = time.getHours();
+        const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 3; // 昼夜温差约6°C
+        const seasonalNoise = (Math.random() - 0.5) * 0.5; // 小范围随机波动
+        const temperature = 20 + dailyCycle + seasonalNoise;
         
-        const levelTrend = this.selectedVat.status === 'leaking' ? -0.5 * i : -0.1 * i;
-        const levelFluctuation = (Math.random() - 0.5) * (this.selectedVat.status === 'leaking' ? 100 : 50);
-        const level = Math.max(0, baseLevel + levelTrend + levelFluctuation);
-        
-        // 温度数据根据陶坛状态略有不同
-        const baseTemp = this.selectedVat.status === 'leaking' ? 22 + Math.random() * 3 : 20;
-        const tempCycle = Math.sin(i * 0.2) * 2;
-        const tempNoise = (Math.random() - 0.5) * 1;
-        const temperature = baseTemp + tempCycle + tempNoise;
+        // 根据陶坛状态和温度变化生成液位数据
+        let level;
+        if (this.selectedVat.status === 'empty') {
+          level = 0;
+        } else if (this.selectedVat.status === 'leaking') {
+          // 渗漏坛：液位持续下降，不受温度影响
+          const leakAmount = i * this.leakRate;
+          level = Math.max(0, this.baseLevel - leakAmount);
+        } else {
+          // 正常坛：液位随温度变化，温度变化5°C液位变化1mm
+          const tempChangeFromBase = temperature - 20; // 相对于20°C基准的变化
+          const levelChange = tempChangeFromBase / 5; // 温度每变化5°C，液位变化1mm
+          level = this.baseLevel + levelChange;
+        }
 
-        this.levelData.push(Number(level.toFixed(0))); // 液位取整毫米
+        // 添加微小随机波动
+        const microFluctuation = (Math.random() - 0.5) * 0.2; // ±0.1mm的微小波动
+        level += microFluctuation;
+
+        // 确保液位不超过1350mm且不小于0
+        level = Math.max(0, Math.min(1350, level));
+
+        // 液位取整，不要小数
+        this.levelData.push(Math.round(level));
         this.temperatureData.push(Number(temperature.toFixed(1)));
       }
-
-      this.timeLabels.reverse();
     },
 
-    // 模拟数据更新
+    // 模拟数据更新 - 修改为时间正序
     simulateDataUpdate() {
       if (!this.selectedVat || this.levelData.length === 0) return;
 
@@ -175,26 +216,46 @@ export default {
           break;
         case '7d':
         case '30d':
-          timeLabel = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours().toString().padStart(2, '0')}:00`;
+          timeLabel = now.getMonth() + 1 + '/' + now.getDate() + ' ' + now.getHours().toString().padStart(2, '0') + ':00';
           break;
       }
 
-      // 生成新的数据点
-      const lastLevel = this.levelData[this.levelData.length - 1];
-      const lastTemp = this.temperatureData[this.temperatureData.length - 1];
-      
-      const levelChange = (Math.random() - 0.5) * (this.selectedVat.status === 'leaking' ? 30 : 10);
-      const tempChange = (Math.random() - 0.5) * 0.3;
-      
-      const newLevel = Math.max(0, lastLevel + levelChange);
-      const newTemp = lastTemp + tempChange;
+      // 生成新的温度数据
+      const hour = now.getHours();
+      const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 3;
+      const seasonalNoise = (Math.random() - 0.5) * 0.5;
+      const newTemp = 20 + dailyCycle + seasonalNoise;
 
-      // 添加新数据
-      this.levelData.push(Number(newLevel.toFixed(0))); // 液位取整毫米
+      // 计算液位变化
+      let newLevel;
+      if (this.selectedVat.status === 'empty') {
+        newLevel = 0;
+      } else if (this.selectedVat.status === 'leaking') {
+        // 渗漏坛：持续下降
+        const lastLevel = this.levelData[this.levelData.length - 1];
+        newLevel = Math.max(0, lastLevel - this.leakRate);
+      } else {
+        // 正常坛：根据温度变化计算液位
+        const lastLevel = this.levelData[this.levelData.length - 1];
+        const tempChange = newTemp - this.lastTemperature;
+        const levelChange = tempChange / 5; // 温度每变化5°C，液位变化1mm
+        
+        // 微小随机波动
+        const microFluctuation = (Math.random() - 0.5) * 0.2;
+        
+        newLevel = lastLevel + levelChange + microFluctuation;
+        newLevel = Math.max(0, Math.min(1350, newLevel));
+      }
+
+      // 更新最后温度
+      this.lastTemperature = newTemp;
+
+      // 添加新数据到数组末尾（最新时间），液位取整
+      this.levelData.push(Math.round(newLevel));
       this.temperatureData.push(Number(newTemp.toFixed(1)));
       this.timeLabels.push(timeLabel);
 
-      // 保持数据点数量
+      // 保持数据点数量，移除最旧的数据（数组开头）
       if (this.levelData.length > this.maxDataPoints) {
         this.levelData.shift();
         this.temperatureData.shift();
@@ -215,10 +276,10 @@ export default {
             color: '#FFF',
           },
           formatter: (params) => {
-            let result = `${params[0].axisValue}<br/>`;
+            let result = params[0].axisValue + '<br/>';
             params.forEach(param => {
               const unit = param.seriesName === '液位' ? 'mm' : '°C';
-              result += `${param.seriesName}: ${param.data}${unit}<br/>`;
+              result += param.seriesName + ': ' + param.data + unit + '<br/>';
             });
             return result;
           }
@@ -283,7 +344,7 @@ export default {
               },
             },
             min: 0,
-            max: 5000
+            max: 1400
           },
           {
             type: 'value',
@@ -305,8 +366,8 @@ export default {
             splitLine: {
               show: false,
             },
-            min: 10,
-            max: 30
+            min: 15,
+            max: 28
           }
         ],
         series: [
@@ -372,6 +433,8 @@ export default {
       this.temperatureData = [];
       this.timeLabels = [];
       this.chartOption = {};
+      this.baseLevel = 1200;
+      this.lastTemperature = 20;
     },
 
     // 清理资源

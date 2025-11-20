@@ -70,7 +70,7 @@
 
     <!-- 无选中陶坛时的提示 -->
     <div v-else class="no-vat-selected">
-      <div class="placeholder-icon">🏺</div>
+      <div class="placeholder-icon">📊</div>
       <p>请选择陶坛查看详情</p>
     </div>
   </div>
@@ -118,7 +118,7 @@ export default {
   methods: {
     // 生成香型数据
     generateAromaType() {
-      const aromaTypes = ['酱香型', '浓香型', '清香型', '米香型', '兼香型'];
+      const aromaTypes = ['酱香型', '浓香型', '清香型'];
       return aromaTypes[Math.floor(Math.random() * aromaTypes.length)];
     },
     

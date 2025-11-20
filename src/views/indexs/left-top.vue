@@ -1,10 +1,3 @@
-<!--
- * @Author: daidai
- * @Date: 2022-02-28 16:16:42
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-07-20 17:57:11
- * @FilePath: \web-pc\src\pages\big-screen\view\indexs\left-center.vue
--->
 <template>
     <div class="monitoring-container">
         <!-- 设备统计 -->
@@ -43,7 +36,6 @@
             <h3 class="section-title">白酒库存统计</h3>
             <div class="inventory-container" v-if="pageflag">
                 <div class="inventory-card pottery-card">
-
                     <div class="card-content">
                         <div class="stat-item">
                             <div class="stat-label">陶坛总数</div>
@@ -144,7 +136,7 @@ export default {
         // 计算平均每坛储酒量
         avgWinePerPottery() {
             if (this.inventoryOverview.potteryInUse === 0) return 0;
-            return (this.inventoryOverview.potteryWineTotal / this.inventoryOverview.potteryInUse).toFixed(1);
+            return (this.inventoryOverview.potteryWineTotal * 1000 / this.inventoryOverview.potteryInUse).toFixed(0);
         }
     },
     filters: {
@@ -170,67 +162,152 @@ export default {
         async getData() {
             this.pageflag = true;
             try {
-                // 获取设备统计数据
-                const deviceRes = await currentGET("countDeviceNum");
-                // 获取库存统计数据
-                const inventoryRes = await currentGET("countPotteryInventory");
+                // 注释掉后端接口调用，使用模拟数据
+                // const deviceRes = await currentGET("countDeviceNum");
+                // const inventoryRes = await currentGET("countPotteryInventory");
 
-                if (!this.timer) {
-                    console.log("设备总览", deviceRes);
-                    console.log("库存统计", inventoryRes);
-                }
+                // 使用模拟数据
+                this.useMockData();
 
-                if (deviceRes.success && inventoryRes.success) {
-                    // 更新设备统计数据
-                    this.userOverview = deviceRes.data;
-                    this.onlineconfig = {
-                        ...this.onlineconfig,
-                        number: [deviceRes.data.onlineNum]
-                    }
-                    this.config = {
-                        ...this.config,
-                        number: [deviceRes.data.totalNum]
-                    }
-                    this.offlineconfig = {
-                        ...this.offlineconfig,
-                        number: [deviceRes.data.offlineNum]
-                    }
-                    this.laramnumconfig = {
-                        ...this.laramnumconfig,
-                        number: [deviceRes.data.alarmNum]
-                    }
-
-                    // 更新库存统计数据
-                    this.inventoryOverview = inventoryRes.data;
-                    this.potteryNumConfig = {
-                        ...this.potteryNumConfig,
-                        number: [inventoryRes.data.potteryTotal]
-                    }
-                    this.potteryWineConfig = {
-                        ...this.potteryWineConfig,
-                        number: [inventoryRes.data.potteryWineTotal]
-                    }
-
-                    this.switper()
-                } else {
-                    this.pageflag = false;
-                    this.$Message.warning(deviceRes.msg || inventoryRes.msg);
-                }
+                // 启动定时刷新
+                this.switper()
+                
             } catch (error) {
                 this.pageflag = false;
                 this.$Message.warning('数据获取失败');
                 console.error('数据获取失败:', error);
             }
         },
-        //轮询
+
+        // 生成与陶坛分布图一致的模拟数据
+        useMockData() {
+            // 设备统计数据模拟 - 基于4栋×5层×8房间结构
+            const totalDevices = 1600; // 4栋×5层×8房间×10设备 = 1600个设备
+            const onlineRate = 0.95; // 95%在线率
+            const alarmRate = 0.02; // 2%告警率
+            
+            const deviceData = {
+                totalNum: totalDevices,
+                onlineNum: Math.floor(totalDevices * onlineRate),
+                offlineNum: totalDevices - Math.floor(totalDevices * onlineRate),
+                alarmNum: Math.floor(totalDevices * alarmRate)
+            };
+
+            // 库存统计数据模拟 - 与陶坛分布图完全对应
+            const totalPotteries = 16000; // 4栋×5层×8房间×100陶坛 = 16000个陶坛
+            
+            // 计算总容量和储酒量（按不同缸型）
+            const jarTypes = [
+                { type: '吨坛', capacity: 1000, count: 13000 },      // 1层和4层：4栋×8房间×100 = 3200个
+                { type: '半吨坛', capacity: 500, count: 2000 },     // 2层和5层：4栋×8房间×100 = 3200个
+                { type: '300KG坛', capacity: 300, count: 1000 }     // 3层：4栋×8房间×100 = 1600个
+            ];
+            
+            let totalCapacity = 0;
+            let totalWineVolume = 0;
+            let usedPotteries = 0;
+            
+            jarTypes.forEach(jar => {
+                totalCapacity += jar.capacity * jar.count;
+                // 模拟分布：90%正常坛，5%渗漏坛，5%空坛
+                const normalCount = Math.floor(jar.count * 0.9);
+                const leakingCount = Math.floor(jar.count * 0.05);
+                const emptyCount = jar.count - normalCount - leakingCount;
+                
+                // 正常坛使用率90%，渗漏坛使用率35%，空坛0%
+                const normalRate = 0.9;
+                const leakingRate = 0.35;
+                
+                totalWineVolume += (normalCount * jar.capacity * normalRate) + 
+                                 (leakingCount * jar.capacity * leakingRate);
+                usedPotteries += normalCount + leakingCount;
+            });
+            
+            // 转换为吨（1吨=1000L）
+            const totalCapacityTon = totalCapacity / 1000;
+            const totalWineVolumeTon = totalWineVolume / 1000;
+            
+            const inventoryData = {
+                potteryTotal: totalPotteries,
+                potteryInUse: usedPotteries,
+                potteryWineTotal: Math.round(totalWineVolumeTon),
+                potteryCapacity: Math.round(totalCapacityTon)
+            };
+
+            // 更新设备统计数据
+            this.userOverview = deviceData;
+            this.onlineconfig = {
+                ...this.onlineconfig,
+                number: [deviceData.onlineNum]
+            }
+            this.config = {
+                ...this.config,
+                number: [deviceData.totalNum]
+            }
+            this.offlineconfig = {
+                ...this.offlineconfig,
+                number: [deviceData.offlineNum]
+            }
+            this.laramnumconfig = {
+                ...this.laramnumconfig,
+                number: [deviceData.alarmNum]
+            }
+
+            // 更新库存统计数据
+            this.inventoryOverview = inventoryData;
+            this.potteryNumConfig = {
+                ...this.potteryNumConfig,
+                number: [inventoryData.potteryTotal]
+            }
+            this.potteryWineConfig = {
+                ...this.potteryWineConfig,
+                number: [inventoryData.potteryWineTotal]
+            }
+
+            if (!this.timer) {
+                console.log("设备总览模拟数据:", deviceData);
+                console.log("库存统计模拟数据:", inventoryData);
+                console.log("陶坛使用率:", this.usageRate + "%");
+                console.log("平均每坛储酒量:", this.avgWinePerPottery + "L");
+            }
+        },
+        
+        //轮询 - 只刷新动画效果，不更新数据
         switper() {
             if (this.timer) {
                 return
             }
             let looper = (a) => {
-                this.getData()
+                // 定时刷新时只重新触发数字翻牌器动画，不重新生成数据
+                // 通过重新设置相同的数字来触发动画效果
+                this.onlineconfig = {
+                    ...this.onlineconfig,
+                    number: [this.userOverview.onlineNum]
+                }
+                this.config = {
+                    ...this.config,
+                    number: [this.userOverview.totalNum]
+                }
+                this.offlineconfig = {
+                    ...this.offlineconfig,
+                    number: [this.userOverview.offlineNum]
+                }
+                this.laramnumconfig = {
+                    ...this.laramnumconfig,
+                    number: [this.userOverview.alarmNum]
+                }
+                this.potteryNumConfig = {
+                    ...this.potteryNumConfig,
+                    number: [this.inventoryOverview.potteryTotal]
+                }
+                this.potteryWineConfig = {
+                    ...this.potteryWineConfig,
+                    number: [this.inventoryOverview.potteryWineTotal]
+                }
+                
+                console.log('定时刷新 - 保持动画效果');
             };
-            this.timer = setInterval(looper, this.$store.state.setting.echartsAutoTime);
+            this.timer = setInterval(looper, this.$store.state.setting.echartsAutoTime || 30000);
         },
     },
 };
