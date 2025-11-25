@@ -298,9 +298,7 @@ export default {
       
       // 在实际应用中，这里会调用父组件的方法或触发事件
       // 将选中的陶坛信息传递出去，以便在其他位置显示详情
-      this.$emit('vat-selected', vat);
-      
-      console.log('选中陶坛:', vat.fullId, '状态:', vat.status);
+      this.$emit('vat-selected', vat); 
     },
     
     // 生成随机日期
@@ -313,7 +311,7 @@ export default {
     
     // 生成随机负责人
     generateRandomManager() {
-      const managers = ['张三', '李四', '王五', '赵六', '钱七'];
+      const managers = ['张明堂', '李文东', '王乾坤'];
       return managers[Math.floor(Math.random() * managers.length)];
     },
     
@@ -772,7 +770,7 @@ export default {
 }
 
 // 响应式设计
-@media (max-width: 1200px) {
+@media (max-width: 1000px) {
   .centermap .mapwrap .building-plan .buildings-container {
     grid-template-columns: 1fr;
     grid-template-rows: repeat(4, 1fr);

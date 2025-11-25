@@ -40,8 +40,8 @@
               <span class="value">{{ currentTemperature }}°C</span>
             </div>
             <div class="info-item">
-              <span class="label">酒精度(%)</span>
-              <span class="value">{{ selectedTank.alcohol }}%</span>
+              <span class="label">酒精度(%vol)</span>
+              <span class="value">{{ selectedTank.alcohol }}%vol</span>
             </div>
           </div>
           <div class="info-row">
@@ -89,9 +89,9 @@ export default {
     return {
       liquidLevel: 12000, // 液位(mm) - 大罐液位更高
       currentTemperature: 21, // 温度(°C)
-      density: 969, // 密度(kg/m³)
+      density: 920, // 密度(kg/m³)
       convertedVolume: 120, // 折算体积(m³)
-      convertedWeight: 116.28 // 折算重量(t)
+      convertedWeight: 110.4 // 折算重量(t)
     };
   },
   watch: {
@@ -118,13 +118,25 @@ export default {
   methods: {
     // 生成香型数据
     generateAromaType() {
-      const aromaTypes = ['浓香型', '酱香型', '清香型'];
+      const aromaTypes = ['浓香型', '酱香型'];
       return aromaTypes[Math.floor(Math.random() * aromaTypes.length)];
     },
     
     // 生成酒精度数据（45-70之间）
     generateAlcoholContent() {
       return (45 + Math.random() * 25).toFixed(1);
+    },
+
+    // 根据酒精度计算密度（符合物理规律：酒精度越高密度越低）
+    calculateDensity(alcohol) {
+      // 白酒密度与酒精度的经验公式
+      // 酒精度45%vol时密度约920 kg/m³，70%vol时密度约860 kg/m³
+      const minDensity = 860;  // 70%vol时的密度
+      const maxDensity = 920;  // 45%vol时的密度
+      
+      // 线性插值计算密度
+      const alcoholRatio = (alcohol - 45) / (70 - 45); // 0-1之间
+      return maxDensity - alcoholRatio * (maxDensity - minDensity);
     },
     
     // 获取状态样式类
@@ -168,9 +180,9 @@ export default {
         this.liquidLevel = Math.max(0, Math.min(15000, baseLevel));
         this.currentTemperature = 20 + Math.random() * 2;
         
-        // 密度计算（与酒精度相关）
-        const alcoholFactor = (this.selectedTank.alcohol - 45) / 25; // 45-70范围归一化
-        this.density = 1000 - alcoholFactor * 50; // 950-1000 kg/m³
+        // 密度计算（与酒精度成反比，符合物理规律）
+        const alcohol = parseFloat(this.selectedTank.alcohol);
+        this.density = this.calculateDensity(alcohol);
         
         // 折算体积计算（基于液位和大罐底面积10平方米）
         const baseArea = 10; // 大罐底面积10平方米

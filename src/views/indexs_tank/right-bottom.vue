@@ -58,13 +58,29 @@ export default {
       // 添加状态跟踪 - 调整为大罐参数
       baseLevel: 12000, // 基础液位高度（大罐）
       lastTemperature: 21, // 上次温度
-      leakRate: 5 // 渗漏罐的下降速率（大罐下降更快）
+      leakRate: 5, // 渗漏罐的下降速率（大罐下降更快）
+      // 泸州月平均气温数据 (单位：°C) - 大罐温度相对稳定，但仍有季节性变化
+      luzhouMonthlyTemps: {
+        1: 8.2,   // 一月
+        2: 10.5,  // 二月
+        3: 15.3,  // 三月
+        4: 20.1,  // 四月
+        5: 23.8,  // 五月
+        6: 26.2,  // 六月
+        7: 29.5,  // 七月
+        8: 29.1,  // 八月
+        9: 25.3,  // 九月
+        10: 20.2, // 十月
+        11: 15.6, // 十一月
+        12: 10.1  // 十二月
+      },
+      // 温度波动范围 - 大罐温度变化较小
+      tempFluctuation: 0.5
     };
   },
   watch: {
     selectedTank: {
       handler(newTank) {
-        console.log('曲线图收到大罐数据:', newTank);
         if (newTank && newTank.id !== this.currentTankId) {
           this.currentTankId = newTank.id;
           this.initializeChartData();
@@ -104,6 +120,48 @@ export default {
       return pointsMap[range] || 96;
     },
 
+    // 获取基于月份的基础温度 - 大罐温度相对稳定，但仍有季节性调整
+    getBaseTemperatureByMonth(month) {
+      const baseTemp = this.luzhouMonthlyTemps[month] || 20;
+      // 大罐温度控制在18-25°C之间，根据季节微调
+      let tankTemp;
+      if (month >= 5 && month <= 9) {
+        // 夏季：22-25°C
+        tankTemp = 22 + (baseTemp - 20) * 0.3;
+      } else if (month >= 11 || month <= 2) {
+        // 冬季：18-21°C
+        tankTemp = 19 + (baseTemp - 10) * 0.2;
+      } else {
+        // 春秋季：20-23°C
+        tankTemp = 21 + (baseTemp - 15) * 0.2;
+      }
+      return Math.max(18, Math.min(25, tankTemp));
+    },
+
+    // 模拟大罐的自然温度变化 - 变化幅度较小
+    getNaturalTemperature(date, isUpdate = false) {
+      const month = date.getMonth() + 1;
+      const hour = date.getHours();
+      const baseTemp = this.getBaseTemperatureByMonth(month);
+      
+      // 大罐昼夜变化较小 - 约1°C
+      const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 0.5;
+      
+      // 随机波动较小
+      let randomNoise;
+      if (isUpdate) {
+        // 更新时基于上次温度做更小幅度的变化
+        const change = (Math.random() - 0.5) * 0.3;
+        randomNoise = Math.max(-this.tempFluctuation, Math.min(this.tempFluctuation, change));
+      } else {
+        randomNoise = (Math.random() - 0.5) * this.tempFluctuation;
+      }
+      
+      const temperature = baseTemp + dailyCycle + randomNoise;
+      
+      return Math.max(17, Math.min(26, temperature)); // 大罐温度控制在17-26°C
+    },
+
     // 初始化图表数据 - 修改为大罐数据
     initializeChartData() {
       if (!this.selectedTank) {
@@ -133,8 +191,9 @@ export default {
       const now = new Date();
       const pointCount = this.maxDataPoints;
 
-      // 设置初始温度 - 大罐温度范围20-22°C
-      this.lastTemperature = 21 + (Math.random() - 0.5) * 2;
+      // 设置初始温度 - 使用新的温度生成方法
+      const currentMonth = now.getMonth() + 1;
+      this.lastTemperature = this.getBaseTemperatureByMonth(currentMonth);
 
       // 计算起始时间
       let startTime = new Date(now);
@@ -170,11 +229,8 @@ export default {
             break;
         }
 
-        // 生成温度数据 - 大罐温度变化较小
-        const hour = time.getHours();
-        const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 1; // 昼夜温差约2°C
-        const seasonalNoise = (Math.random() - 0.5) * 0.3; // 小范围随机波动
-        const temperature = 21 + dailyCycle + seasonalNoise;
+        // 使用新的温度生成方法
+        const temperature = this.getNaturalTemperature(time);
         
         // 根据大罐状态和温度变化生成液位数据
         let level;
@@ -201,6 +257,9 @@ export default {
         // 液位取整，不要小数
         this.levelData.push(Math.round(level));
         this.temperatureData.push(Number(temperature.toFixed(1)));
+        
+        // 更新最后温度用于连续性
+        this.lastTemperature = temperature;
       }
     },
 
@@ -221,11 +280,8 @@ export default {
           break;
       }
 
-      // 生成新的温度数据 - 大罐温度范围
-      const hour = now.getHours();
-      const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 1;
-      const seasonalNoise = (Math.random() - 0.5) * 0.3;
-      const newTemp = 21 + dailyCycle + seasonalNoise;
+      // 使用新的温度生成方法，传入true表示是更新操作
+      const newTemp = this.getNaturalTemperature(now, true);
 
       // 计算液位变化
       let newLevel;
@@ -266,7 +322,7 @@ export default {
       this.updateChart();
     },
 
-    // 更新图表配置 - 调整y轴范围为15000mm
+    // 更新图表配置 - 调整y轴范围为15000mm和温度范围
     updateChart() {
       this.chartOption = {
         tooltip: {
@@ -367,8 +423,8 @@ export default {
             splitLine: {
               show: false,
             },
-            min: 19, // 调整温度范围
-            max: 23
+            min: 17, // 调整温度范围为大罐控制范围
+            max: 26
           }
         ],
         series: [

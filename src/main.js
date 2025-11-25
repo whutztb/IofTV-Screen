@@ -19,9 +19,11 @@ import Messages from './components/message/message'
 import "vue-easytable/libs/theme-default/index.css";
 import  '@/assets/css/public.scss'
 import "@/assets/css/index.scss"
+import ElementUI from 'element-ui'
 
 
 import * as filters from '@/directives/filters'
+
 
 // require('./mock/mock')//是否使用mock
 Vue.config.productionTip = false;
@@ -36,6 +38,7 @@ Vue.prototype.$Message =  Messages
 Vue.use(Radio);
 Vue.use(Button);
 Vue.use(RadioGroup)
+Vue.use(ElementUI)
 
 // datav组件
 Vue.use(loading)

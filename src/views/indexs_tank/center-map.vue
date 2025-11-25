@@ -202,7 +202,7 @@ export default {
     
     // 生成随机负责人
     generateRandomManager() {
-      const managers = ['张三', '李四', '王五', '赵六', '钱七'];
+      const managers = ['张明堂', '李文东', '王乾坤'];
       return managers[Math.floor(Math.random() * managers.length)];
     },
     

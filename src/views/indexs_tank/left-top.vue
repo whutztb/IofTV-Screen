@@ -187,7 +187,6 @@ export default {
         },
         // 只刷新显示，不改变数据
         refreshDisplay() {
-            console.log("界面刷新 - 数据保持不变");
             // 这里可以添加一些界面刷新的逻辑，但数据保持不变
             // 例如强制组件重新渲染，但保持数据不变
             this.$forceUpdate();
@@ -206,11 +205,6 @@ export default {
                 // 使用固定的模拟数据
                 const mockDeviceData = this.fixedMockData.deviceData;
                 const mockInventoryData = this.fixedMockData.inventoryData;
-
-                if (!this.timer) {
-                    console.log("设备总览-模拟数据", mockDeviceData);
-                    console.log("库存统计-模拟数据", mockInventoryData);
-                }
 
                 // 更新设备统计数据
                 this.userOverview = mockDeviceData;

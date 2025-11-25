@@ -92,11 +92,7 @@ export default {
   mounted() {},
   methods: {
     handleVatSelected(vat) {
-      console.log('主页面接收到选中的陶坛事件:', vat);
       this.selectedVat = vat;
-      
-      // 可选：在控制台输出更多调试信息
-      console.log('selectedVat 已更新:', this.selectedVat);
     }
   
   },

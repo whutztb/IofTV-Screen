@@ -42,7 +42,7 @@
                             </el-radio-group>
                         </div>
                     </div>
-                    <div class="setting_item">
+                    <!--<div class="setting_item">
                         <span class="setting_label">
                             实时预警轮播:
                         </span>
@@ -52,7 +52,7 @@
                                 <el-radio :label="false">否</el-radio>
                             </el-radio-group>
                         </div>
-                    </div>
+                    </div>-->
                     <div class="flex justify-center">
                         <!-- <el-button type="primary" round size="mini">确定</el-button> -->
                     </div>

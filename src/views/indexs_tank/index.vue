@@ -31,7 +31,7 @@
       </ItemWrap>
     </div>
     <div class="contetn_right">
-      <ItemWrap class="contetn_left-center contetn_lr-item" title="酒库统计">
+      <ItemWrap class="contetn_left-center contetn_lr-item" title="大罐统计">
         <LeftCenter />
       </ItemWrap>
       <!--<ItemWrap class="contetn_left-bottom contetn_lr-item" title="历史报警" >
@@ -92,11 +92,7 @@ export default {
   mounted() {},
   methods: {
     handleTankSelected(vat) {
-      console.log('主页面接收到选中的大罐事件:', vat);
       this.selectedTank = vat;
-      
-      // 可选：在控制台输出更多调试信息
-      console.log('selectedTank 已更新:', this.selectedTank);
     }
   
   },

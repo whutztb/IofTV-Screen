@@ -58,13 +58,29 @@ export default {
       // 添加状态跟踪
       baseLevel: 1200, // 基础液位高度
       lastTemperature: 20, // 上次温度
-      leakRate: 0.1 // 渗漏坛的下降速率
+      leakRate: 0.1, // 渗漏坛的下降速率
+      // 泸州月平均气温数据 (单位：°C)
+      luzhouMonthlyTemps: {
+        1: 8.2,   // 一月
+        2: 10.5,  // 二月
+        3: 15.3,  // 三月
+        4: 20.1,  // 四月
+        5: 23.8,  // 五月
+        6: 26.2,  // 六月
+        7: 29.5,  // 七月
+        8: 29.1,  // 八月
+        9: 25.3,  // 九月
+        10: 20.2, // 十月
+        11: 15.6, // 十一月
+        12: 10.1  // 十二月
+      },
+      // 温度波动范围
+      tempFluctuation: 1.5
     };
   },
   watch: {
     selectedVat: {
       handler(newVat) {
-        console.log('曲线更新:');
         if (newVat && newVat.id !== this.currentVatId) {
           this.currentVatId = newVat.id;
           this.initializeChartData();
@@ -104,6 +120,39 @@ export default {
       return pointsMap[range] || 96;
     },
 
+    // 获取基于月份的基础温度
+    getBaseTemperatureByMonth(month) {
+      return this.luzhouMonthlyTemps[month] || 20;
+    },
+
+    // 模拟更自然的温度变化
+    getNaturalTemperature(date, isUpdate = false) {
+      const month = date.getMonth() + 1;
+      const hour = date.getHours();
+      const baseTemp = this.getBaseTemperatureByMonth(month);
+      
+      // 昼夜变化 - 更平滑的正弦波
+      const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 6; // 昼夜温差约12°C
+      
+      // 添加随机波动，但保持连续性
+      let randomNoise;
+      if (isUpdate) {
+        // 更新时基于上次温度做小幅度变化
+        const change = (Math.random() - 0.5) * 0.8;
+        randomNoise = Math.max(-this.tempFluctuation, Math.min(this.tempFluctuation, change));
+      } else {
+        // 初始生成时使用正常随机
+        randomNoise = (Math.random() - 0.5) * this.tempFluctuation;
+      }
+      
+      // 季节性微调 - 不同季节的昼夜温差略有不同
+      const seasonalAdjustment = month >= 5 && month <= 9 ? 1.2 : 0.8; // 夏季温差稍大
+      
+      const temperature = baseTemp + (dailyCycle * seasonalAdjustment) + randomNoise;
+      
+      return Math.max(-5, Math.min(40, temperature)); // 确保温度在合理范围内
+    },
+
     // 初始化图表数据
     initializeChartData() {
       if (!this.selectedVat) {
@@ -133,7 +182,8 @@ export default {
       const pointCount = this.maxDataPoints;
 
       // 设置初始温度
-      this.lastTemperature = 20 + (Math.random() - 0.5) * 2;
+      const currentMonth = now.getMonth() + 1;
+      this.lastTemperature = this.getBaseTemperatureByMonth(currentMonth);
 
       // 计算起始时间
       let startTime = new Date(now);
@@ -169,11 +219,8 @@ export default {
             break;
         }
 
-        // 生成温度数据 - 模拟昼夜变化
-        const hour = time.getHours();
-        const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 3; // 昼夜温差约6°C
-        const seasonalNoise = (Math.random() - 0.5) * 0.5; // 小范围随机波动
-        const temperature = 20 + dailyCycle + seasonalNoise;
+        // 使用新的温度生成方法
+        const temperature = this.getNaturalTemperature(time);
         
         // 根据陶坛状态和温度变化生成液位数据
         let level;
@@ -200,6 +247,9 @@ export default {
         // 液位取整，不要小数
         this.levelData.push(Math.round(level));
         this.temperatureData.push(Number(temperature.toFixed(1)));
+        
+        // 更新最后温度用于连续性
+        this.lastTemperature = temperature;
       }
     },
 
@@ -220,11 +270,8 @@ export default {
           break;
       }
 
-      // 生成新的温度数据
-      const hour = now.getHours();
-      const dailyCycle = Math.sin((hour - 6) * Math.PI / 12) * 3;
-      const seasonalNoise = (Math.random() - 0.5) * 0.5;
-      const newTemp = 20 + dailyCycle + seasonalNoise;
+      // 使用新的温度生成方法，传入true表示是更新操作
+      const newTemp = this.getNaturalTemperature(now, true);
 
       // 计算液位变化
       let newLevel;
@@ -366,8 +413,8 @@ export default {
             splitLine: {
               show: false,
             },
-            min: 15,
-            max: 28
+            min: -5,
+            max: 40
           }
         ],
         series: [

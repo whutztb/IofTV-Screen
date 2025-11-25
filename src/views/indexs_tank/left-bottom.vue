@@ -182,8 +182,6 @@ export default {
         currentGET("lidAlarms", { limitNum: 10 }),
         currentGET("pressureAlarms", { limitNum: 10 })
       ]).then(([lidRes, pressureRes]) => {
-        console.log("振动报警数据:", lidRes);
-        console.log("压力报警数据:", pressureRes);
         
         if (lidRes.success) {
           this.lidAlarms = lidRes.data.list || this.generateMockLidData();
@@ -237,7 +235,7 @@ export default {
           open_time: randomTime.toISOString(),
           deal_status: status,
           deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
-          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_person: status === '已处理' ? ['张明堂', '李文东', '王乾坤'][Math.floor(Math.random() * 3)] : null,
           deal_desc: status === '已处理' ? '已现场检查并复位' : null
         });
       }
@@ -278,7 +276,7 @@ export default {
           pressure_value: pressureValue,
           deal_status: status,
           deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
-          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_person: status === '已处理' ? ['张明堂', '李文东', '王乾坤'][Math.floor(Math.random() * 3)] : null,
           deal_desc: status === '已处理' ? 
             (pressureType === 'pressure_low' ? '已调整压力阀' : '已检查泄压装置') : null
         });

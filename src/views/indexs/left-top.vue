@@ -263,13 +263,6 @@ export default {
                 ...this.potteryWineConfig,
                 number: [inventoryData.potteryWineTotal]
             }
-
-            if (!this.timer) {
-                console.log("设备总览模拟数据:", deviceData);
-                console.log("库存统计模拟数据:", inventoryData);
-                console.log("陶坛使用率:", this.usageRate + "%");
-                console.log("平均每坛储酒量:", this.avgWinePerPottery + "L");
-            }
         },
         
         //轮询 - 只刷新动画效果，不更新数据
@@ -304,8 +297,6 @@ export default {
                     ...this.potteryWineConfig,
                     number: [this.inventoryOverview.potteryWineTotal]
                 }
-                
-                console.log('定时刷新 - 保持动画效果');
             };
             this.timer = setInterval(looper, this.$store.state.setting.echartsAutoTime || 30000);
         },

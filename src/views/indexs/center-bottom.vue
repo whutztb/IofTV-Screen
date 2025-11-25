@@ -40,8 +40,8 @@
               <span class="value">{{ currentTemperature }}°C</span>
             </div>
             <div class="info-item">
-              <span class="label">酒精度(%)</span>
-              <span class="value">{{ selectedVat.alcohol }}%</span>
+              <span class="label">酒精度(%vol)</span>
+              <span class="value">{{ selectedVat.alcohol }}%vol</span>
             </div>
           </div>
           <div class="info-row">
@@ -99,7 +99,6 @@ export default {
     selectedVat: {
       handler(newVat) {
         if (newVat) {
-          console.log('属性更新:');
           this.updateRealTimeData();
           // 确保新选中的陶坛有香型和酒精度数据
           if (!newVat.aromaType) {
@@ -118,13 +117,25 @@ export default {
   methods: {
     // 生成香型数据
     generateAromaType() {
-      const aromaTypes = ['酱香型', '浓香型', '清香型'];
+      const aromaTypes = ['酱香型', '浓香型'];
       return aromaTypes[Math.floor(Math.random() * aromaTypes.length)];
     },
     
-    // 生成酒精度数据
+    // 生成酒精度数据（原酒范围45-70%vol）
     generateAlcoholContent() {
-      return (40 + Math.random() * 20).toFixed(1);
+      return (45 + Math.random() * 25).toFixed(1);
+    },
+
+    // 根据酒精度计算密度（符合物理规律：酒精度越高密度越低）
+    calculateDensity(alcohol) {
+      // 白酒密度与酒精度的经验公式
+      // 酒精度45%vol时密度约920 kg/m³，70%vol时密度约860 kg/m³
+      const minDensity = 860;  // 70%vol时的密度
+      const maxDensity = 920;  // 45%vol时的密度
+      
+      // 线性插值计算密度
+      const alcoholRatio = (alcohol - 45) / (70 - 45); // 0-1之间
+      return maxDensity - alcoholRatio * (maxDensity - minDensity);
     },
     
     // 获取状态样式类
@@ -162,15 +173,15 @@ export default {
       } else {
         // 正常或渗漏状态的陶坛有液位
         const baseLevel = this.selectedVat.status === 'leaking' ? 
-          Math.random() * 500 + 100 : // 渗漏状态液位较低 500-1000mm
-          Math.random() * 500 + 500;  // 正常状态液位较高 1200-2000mm
+          Math.random() * 500 + 100 : // 渗漏状态液位较低 100-600mm
+          Math.random() * 500 + 500;  // 正常状态液位较高 500-1000mm
         
         this.liquidLevel = Math.max(0, Math.min(1500, baseLevel));
         this.currentTemperature = 18 + Math.random() * 4;
         
-        // 密度计算（与酒精度相关）
-        const alcoholFactor = this.selectedVat.alcohol / 100;
-        this.density = 950 + alcoholFactor * 40; // 900-940 kg/m³
+        // 密度计算（与酒精度成反比，符合物理规律）
+        const alcohol = parseFloat(this.selectedVat.alcohol);
+        this.density = this.calculateDensity(alcohol);
         
         // 折算体积计算（基于液位和陶坛尺寸）
         // 假设陶坛底面积约为 0.8 m²

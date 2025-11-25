@@ -180,9 +180,7 @@ export default {
         currentGET("lidAlarms", { limitNum: 10 }),
         currentGET("leakAlarms", { limitNum: 10 })
       ]).then(([lidRes, leakRes]) => {
-        console.log("振动报警数据:", lidRes);
-        console.log("渗漏报警数据:", leakRes);
-        
+       
         if (lidRes.success) {
           this.lidAlarms = lidRes.data.list || this.generateMockLidData();
         } else {
@@ -236,7 +234,7 @@ export default {
           open_time: randomTime.toISOString(),
           deal_status: status,
           deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
-          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_person: status === '已处理' ? ['张明堂', '李文东', '王乾坤'][Math.floor(Math.random() * 3)] : null,
           deal_desc: status === '已处理' ? '已现场检查并复位' : null
         });
       }
@@ -274,7 +272,7 @@ export default {
           leak_height: leakHeight,
           deal_status: status,
           deal_time: status === '已处理' ? new Date(randomTime.getTime() + 30 * 60 * 1000).toISOString() : null,
-          deal_person: status === '已处理' ? ['张三', '李四', '王五'][Math.floor(Math.random() * 3)] : null,
+          deal_person: status === '已处理' ? ['张明堂', '李文东', '王乾坤'][Math.floor(Math.random() * 3)] : null,
           deal_desc: status === '已处理' ? '已进行密封处理' : null
         });
       }

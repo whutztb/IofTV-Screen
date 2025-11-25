@@ -46,6 +46,7 @@ nvm use 16.20.2
 nvm use 20.15.1
 # 安装依赖并启动项目
 npm install
-npm start
+npm start 启动项目
 
+npm run build 打包项目
 

@@ -7,6 +7,7 @@
  */
 import * as API from "../api";
 
+
 export const paramType ={
     'countUserNum':"/bigscreen/countUserNum", //用户总览
     'countDeviceNum':"/bigscreen/countDeviceNum", //设备总览 
@@ -95,4 +96,8 @@ export const currentApi={
     currentSelectList,
     currentPOST,
     currentGET
+}
+
+export const login = (data) => {
+  return API.POST("/device_login", data)
 }
